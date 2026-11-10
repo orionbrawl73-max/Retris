@@ -10,7 +10,7 @@
   </style>
 </head>
 <body>
-  <iframe id="gameFrame" src="game.html" allow="clipboard-read; clipboard-write; autoplay; gamepad"></iframe>
+  <iframe id="gameFrame" src="game.html?v=2" allow="clipboard-read; clipboard-write; autoplay; gamepad"></iframe>
 
   <script>
     const frame = document.getElementById('gameFrame');
@@ -20,7 +20,7 @@
         const url = new URL(text);
         const code = url.searchParams.get('netplay');
         if (code) {
-          return 'https://wasm4.org' + code;
+          return 'https://wasm4.org\x23' + code;
         }
       }
       return text;
