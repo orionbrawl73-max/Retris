@@ -10,13 +10,13 @@
   </style>
 </head>
 <body>
-  <iframe id="gameFrame" src="game.html?v=2" allow="clipboard-read; clipboard-write; autoplay; gamepad"></iframe>
+  <iframe id="gameFrame" src="game.html" allow="clipboard-read; clipboard-write; autoplay; gamepad"></iframe>
 
   <script>
     const frame = document.getElementById('gameFrame');
     
     function formatNetplayLink(text) {
-      if (text && text.includes('?netplay=')) {
+      if (text && text.includes('netplay=')) {
         const url = new URL(text);
         const code = url.searchParams.get('netplay');
         if (code) {
@@ -26,26 +26,32 @@
       return text;
     }
 
-    frame.addEventListener('load', () => {
+    function hookClipboard() {
       const win = frame.contentWindow;
       const doc = frame.contentDocument;
+      if (!win || !doc) return;
 
-      if (win.navigator && win.navigator.clipboard) {
+      if (win.navigator && win.navigator.clipboard && !win.navigator.clipboard._hooked) {
         win.navigator.clipboard.writeText = function(text) {
-          const fixed = formatNetplayLink(text);
-          return navigator.clipboard.writeText(fixed);
+          return navigator.clipboard.writeText(formatNetplayLink(text));
         };
+        win.navigator.clipboard._hooked = true;
       }
 
-      doc.addEventListener('copy', (e) => {
-        const selected = win.getSelection().toString();
-        if (selected.includes('?netplay=')) {
-          e.preventDefault();
-          const fixed = formatNetplayLink(selected);
-          e.clipboardData.setData('text/plain', fixed);
-        }
-      });
-    });
+      if (!doc._copyHooked) {
+        doc.addEventListener('copy', (e) => {
+          const selected = win.getSelection().toString();
+          if (selected.includes('netplay=')) {
+            e.preventDefault();
+            e.clipboardData.setData('text/plain', formatNetplayLink(selected));
+          }
+        });
+        doc._copyHooked = true;
+      }
+    }
+
+    frame.addEventListener('load', hookClipboard);
+    setInterval(hookClipboard, 300);
   </script>
 </body>
 </html>
